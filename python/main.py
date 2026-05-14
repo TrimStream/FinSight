@@ -30,3 +30,28 @@ def get_db():
         password=os.getenv("DB_PASSWORD"),
         dbname=os.getenv("DB_NAME"),
     )
+
+SCHEMA_CONTEXT = """
+You are a SQL expert. You have access to a PostgreSQL database with these tables:
+
+stocks(id, symbol, company, sector, created_at)
+price_history(id, stock_id, open, high, low, close, volume, recorded_at, created_at)
+
+stocks.id joins to price_history.stock_id
+
+Rules:
+- Only generate SELECT queries, never INSERT, UPDATE, DELETE, or DROP
+- Always return valid PostgreSQL SQL
+- Return ONLY the SQL query with no explanation, no markdown, no backticks
+- Use recorded_at for date filtering
+- Round decimal values to 2 places
+"""
+
+class QueryRequest(BaseModel):
+    question: str
+
+class QueryResponse(BaseModel):
+    question: str
+    sql: str
+    results: list
+    columns: list
