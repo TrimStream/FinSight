@@ -1,5 +1,7 @@
 import os
 import re
+from urllib import response
+
 import psycopg2
 import google.generativeai as genai
 from cffi import model
@@ -55,3 +57,48 @@ class QueryResponse(BaseModel):
     sql: str
     results: list
     columns: list
+
+@app.post("/api/query", response_model=QueryResponse)
+async def natural_language_query(request: QueryRequest):
+    prompt = f"{SCHEMA_CONTEXT}\n\nQuestion: {request.question}\n\nSQL:"
+
+    response = model.generate_content(prompt)
+    sql = response.text.strip()
+
+    sql = re.sub(r' ```sql|```', '', sql).strip()
+
+    if not sql.upper().startswith("SELECT"):
+        raise HTTPException(status_code=400, detail="Only SELECT queries are allowed.")
+
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(sql)
+        rows = cur.fetchall()
+        columns = [desc[0] for desc in cur.description]
+        cur.close()
+        conn.close()
+
+        conn2 = get_db()
+        cur2 = conn2.cursor()
+        cur2.execute("""
+            INSERT INTO queries (natural_language, generated_sql, result_count, success)
+            VALUES (%s, %s, %s, %s)
+        """, (request.question, sql, len(rows), True))
+        conn2.commit()
+        cur2.close()
+        conn2.close()
+
+        return QueryResponse(
+            question=request.question,
+            sql=sql,
+            results=[list(row) for row in rows],
+            columns=columns,
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Query failed: {str(e)}")
+
+@app.get("/api/health")
+async def health():
+    return {"status": "ok"}
