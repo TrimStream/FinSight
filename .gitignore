@@ -1,0 +1,6 @@
+.env
+tmp/
+*.exe
+__pycache__/
+*.pyc
+.air.toml
