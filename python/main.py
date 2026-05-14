@@ -1,9 +1,7 @@
 import os
 import re
-from urllib import response
-
 import psycopg2
-import google.generativeai as genai
+from google import genai
 from cffi import model
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,8 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-2.5-flash")
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def get_db():
     return psycopg2.connect(
@@ -62,7 +59,10 @@ class QueryResponse(BaseModel):
 async def natural_language_query(request: QueryRequest):
     prompt = f"{SCHEMA_CONTEXT}\n\nQuestion: {request.question}\n\nSQL:"
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt
+    )
     sql = response.text.strip()
 
     sql = re.sub(r' ```sql|```', '', sql).strip()
