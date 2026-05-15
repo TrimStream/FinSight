@@ -110,14 +110,29 @@ func fetchAndStore(symbol string) error {
 		return fmt.Errorf("no time series data returned for %s", symbol)
 	}
 
-	overview, err := fetchCompanyInfo(symbol)
-	if err != nil {
-		log.Printf("Could not fetch company info for %s, using symbol as name", symbol)
-		overview = CompanyOverview{Symbol: symbol, Name: symbol, Sector: "Unknown"}
+	companyNames := map[string]string{
+		"AAPL":  "Apple Inc.",
+		"GOOGL": "Alphabet Inc.",
+		"MSFT":  "Microsoft Corporation",
+		"AMZN":  "Amazon.com Inc.",
+		"TSLA":  "Tesla Inc.",
+		"JPM":   "JPMorgan Chase & Co.",
+		"NVDA":  "NVIDIA Corporation",
+		"META":  "Meta Platforms Inc.",
 	}
 
-	// Insert or get the stock from the database
-	stockID, err := upsertStock(symbol, overview.Name, overview.Sector)
+	companySectors := map[string]string{
+		"AAPL":  "Technology",
+		"GOOGL": "Technology",
+		"MSFT":  "Technology",
+		"AMZN":  "Consumer Cyclical",
+		"TSLA":  "Automotive",
+		"JPM":   "Financial Services",
+		"NVDA":  "Technology",
+		"META":  "Technology",
+	}
+
+	stockID, err := upsertStock(symbol, companyNames[symbol], companySectors[symbol])
 	if err != nil {
 		return fmt.Errorf("upsert stock failed: %w", err)
 	}
@@ -165,26 +180,4 @@ func upsertStock(symbol string, company string, sector string) (int, error) {
     `, symbol, company, sector).Scan(&id)
 
 	return id, err
-}
-
-func fetchCompanyInfo(symbol string) (CompanyOverview, error) {
-	apiKey := os.Getenv("ALPHA_VANTAGE_KEY")
-	url := fmt.Sprintf(
-		"https://www.alphavantage.co/query?function=OVERVIEW&symbol=%s&apikey=%s",
-		symbol, apiKey,
-	)
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return CompanyOverview{}, fmt.Errorf("HTTP request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	var overview CompanyOverview
-	err = json.NewDecoder(resp.Body).Decode(&overview)
-	if err != nil {
-		return CompanyOverview{}, fmt.Errorf("JSON decode failed: %w", err)
-	}
-
-	return overview, nil
 }
