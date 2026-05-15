@@ -8,12 +8,6 @@ import QueryBox from './QueryBox';
 const GO_API = 'http://localhost:8080';
 const PYTHON_API = 'http://localhost:8001';
 
-interface Stock {
-  symbol: string
-  company: string
-  sector: string
-}
-
 interface StockSummary {
   symbol: string
   avg_close: number;
@@ -39,7 +33,6 @@ interface QueryResult {
 }
 
 const App: React.FC = () => {
-  const [stocks, setStocks] = useState<Stock[]>([]);
   const [summaries, setSummaries] = useState<StockSummary[]>([]);
   const [selectedSymbol, setSelectedSymbol] = useState<string>('AAPL');
   const [priceHistory, setPriceHistory] = useState<PriceRecord[]>([]);
@@ -58,11 +51,7 @@ const App: React.FC = () => {
 
   const fetchInitialData = async () => {
     try {
-      const [stocksRes, summariesRes] = await Promise.all([
-        axios.get(`${GO_API}/api/stocks`),
-        axios.get(`${GO_API}/api/stocks/summary`)
-      ]);
-      setStocks(stocksRes.data);
+      const summariesRes = await axios.get(`${GO_API}/api/stocks/summary`);
       setSummaries(summariesRes.data);
       setLastUpdated(new Date().toLocaleString());
     } catch (err) {

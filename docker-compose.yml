@@ -12,6 +12,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
@@ -25,7 +30,8 @@ services:
       DB_NAME: finsight
       ALPHA_VANTAGE_KEY: ${ALPHA_VANTAGE_KEY}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   python:
     build: ./python
