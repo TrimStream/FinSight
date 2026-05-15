@@ -1,6 +1,9 @@
 import React, { useState, useEffect} from 'react';
 import axios from "axios";
 import './App.css';
+import Ticker from './Ticker';
+import StockChart from './StockChart';
+import QueryBox from './QueryBox';
 
 const GO_API = 'http://localhost:8080';
 const PYTHON_API = 'http://localhost:8001';
@@ -99,8 +102,34 @@ const App: React.FC = () => {
   }
 
   return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0a0e1a' }}>
+    <div className="app-container">
+      <div className="header">
+        <div className="header-title">FINSIGHT</div>
+        <div className="header-subtitle">Real-time financial intelligence</div>
       </div>
+      <div className="main-content">
+        <Ticker
+          summaries={summaries}
+          selectedSymbol={selectedSymbol}
+          onSelect={setSelectedSymbol}
+        />
+        <div className="chart-area">
+          <StockChart
+            symbol={selectedSymbol}
+            priceHistory={priceHistory}
+            summary={summaries.find(s => s.symbol === selectedSymbol)}
+            loading={historyLoading}
+          />
+        </div>
+      </div>
+      <QueryBox
+        onQuery={handleQuery}
+        result={queryResult}
+      />
+      <div className="last-updated">
+        Last updated: {lastUpdated}
+      </div>
+    </div>
   );
 };
 
