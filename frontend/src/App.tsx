@@ -44,49 +44,64 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [historyLoading, setHistoryLoading] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<string>('');
-}
 
-useEffect(() => {
-  fetchInitialData();
-}, []);
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
 
-useEffect(() => {
-  fetchPriceHistory(selectedSymbol);
-}, [selectedSymbol]);
+  useEffect(() => {
+    fetchPriceHistory(selectedSymbol);
+  }, [selectedSymbol]);
 
-const fetchInitialData = async () => {
-  try {
-    const [stocksRes, summariesRes] = await Promise.all([
-      axios.get(`${GO_API}/api/stocks`),
-      axios.get(`${GO_API}/api/stocks/summary`)
-    ]);
-    setStocks(stocksRes.data);
-    setSummaries(summariesRes.data);
-    setLastUpdated(new Date().toLocaleString());
-  } catch (err) {
-    console.error("Failed to fetch initial data", err);
-  } finally {
-    setLoading(false);
-  }
-};
-
-const fetchPriceHistory = async (symbol: string) => {
-    setHistoryLoading(true);
+  const fetchInitialData = async () => {
     try {
-      const res = await axios.get(`${GO_API}/api/stocks/history?symbol=${symbol}`);
-      setPriceHistory(res.data);
+      const [stocksRes, summariesRes] = await Promise.all([
+        axios.get(`${GO_API}/api/stocks`),
+        axios.get(`${GO_API}/api/stocks/summary`)
+      ]);
+      setStocks(stocksRes.data);
+      setSummaries(summariesRes.data);
+      setLastUpdated(new Date().toLocaleString());
     } catch (err) {
-      console.error('Failed to fetch price history:', err);
+      console.error("Failed to fetch initial data", err);
     } finally {
-      setHistoryLoading(false);
+      setLoading(false);
     }
+  };
+
+  const fetchPriceHistory = async (symbol: string) => {
+      setHistoryLoading(true);
+      try {
+        const res = await axios.get(`${GO_API}/api/stocks/history?symbol=${symbol}`);
+        setPriceHistory(res.data);
+      } catch (err) {
+        console.error('Failed to fetch price history:', err);
+      } finally {
+        setHistoryLoading(false);
+      }
+  };
+
+  const handleQuery = async (question: string) => {
+      try {
+        const res = await axios.post(`${PYTHON_API}/api/query`, { question });
+        setQueryResult(res.data);
+      } catch (err) {
+        console.error('Query failed:', err);
+      }
+  };
+
+  if (loading) {
+    return (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#3b82f6', fontSize: '18px' }}>
+            Loading FinSight...
+        </div>
+    );
+  }
+
+  return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#0a0e1a' }}>
+      </div>
+  );
 };
 
-const handleQuery = async (question: string) => {
-    try {
-      const res = await axios.post(`${PYTHON_API}/api/query`, { question });
-      setQueryResult(res.data);
-    } catch (err) {
-      console.error('Query failed:', err);
-    }
-};
+export default App;
