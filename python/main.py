@@ -2,7 +2,6 @@ import os
 import re
 import psycopg2
 from google import genai
-from cffi import model
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -28,6 +27,7 @@ def get_db():
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
         dbname=os.getenv("DB_NAME"),
+        sslmode=os.getenv("DB_SSLMODE", "require"),
     )
 
 SCHEMA_CONTEXT = """
