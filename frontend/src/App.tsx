@@ -5,8 +5,8 @@ import Ticker from './Ticker';
 import StockChart from './StockChart';
 import QueryBox from './QueryBox';
 
-const GO_API = 'http://localhost:8080';
-const PYTHON_API = 'http://localhost:8001';
+const GO_API = process.env.REACT_APP_GO_API || 'http://localhost:8080';
+const PYTHON_API = process.env.REACT_APP_PYTHON_API || 'http://localhost:8001';
 
 interface StockSummary {
   symbol: string
