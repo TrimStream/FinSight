@@ -58,28 +58,12 @@ func main() {
 	}
 	defer db.Close()
 
-	// Test the connection
 	err = db.Ping()
 	if err != nil {
 		log.Fatal("Cannot reach database:", err)
 	}
 	fmt.Println("Connected to PostgreSQL successfully!")
 
-	// List of stocks to track
-	symbols := []string{"AAPL", "GOOGL", "MSFT", "AMZN", "TSLA", "JPM", "NVDA", "META"}
-
-	// Fetch and store data for each stock
-	for _, symbol := range symbols {
-		fmt.Printf("Fetching data for %s...\n", symbol)
-		err := fetchAndStore(symbol)
-		if err != nil {
-			log.Printf("Error fetching %s: %v", symbol, err)
-		}
-		// Wait 12 seconds between requests to respect free tier rate limits
-		time.Sleep(15 * time.Second)
-	}
-
-	fmt.Println("Done! All stock data has been stored.")
 	startAPI()
 }
 
