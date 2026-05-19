@@ -52,7 +52,8 @@ func main() {
 		os.Getenv("DB_SSLMODE"),
 	)
 
-	db, err := sql.Open("postgres", connStr)
+	var err error
+	db, err = sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal("Error connecting to database:", err)
 	}
