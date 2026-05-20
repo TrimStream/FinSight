@@ -45,10 +45,10 @@ func main() {
 	if err != nil {
 		log.Fatal("Cannot reach database:", err)
 	}
+
 	fmt.Println("Connected to database, starting fetch...")
 
 	symbols := []string{"AAPL", "GOOGL", "MSFT", "AMZN", "TSLA", "JPM", "NVDA", "META"}
-
 	for _, symbol := range symbols {
 		fmt.Printf("Fetching %s...\n", symbol)
 		if err := fetchAndStore(symbol); err != nil {
@@ -83,33 +83,6 @@ func fetchAndStore(symbol string) error {
 		return fmt.Errorf("no time series data returned for %s", symbol)
 	}
 
-	companyNames := map[string]string{
-		"AAPL":  "Apple Inc.",
-		"GOOGL": "Alphabet Inc.",
-		"MSFT":  "Microsoft Corporation",
-		"AMZN":  "Amazon.com Inc.",
-		"TSLA":  "Tesla Inc.",
-		"JPM":   "JPMorgan Chase & Co.",
-		"NVDA":  "NVIDIA Corporation",
-		"META":  "Meta Platforms Inc.",
-	}
-
-	companySectors := map[string]string{
-		"AAPL":  "Technology",
-		"GOOGL": "Technology",
-		"MSFT":  "Technology",
-		"AMZN":  "Consumer Cyclical",
-		"TSLA":  "Automotive",
-		"JPM":   "Financial Services",
-		"NVDA":  "Technology",
-		"META":  "Technology",
-	}
-
-	stockID, err := upsertStock(symbol, companyNames[symbol], companySectors[symbol])
-	if err != nil {
-		return fmt.Errorf("upsert stock failed: %w", err)
-	}
-
 	count := 0
 	for dateStr, values := range data.TimeSeries {
 		recordedAt, err := time.Parse("2006-01-02", dateStr)
@@ -124,10 +97,10 @@ func fetchAndStore(symbol string) error {
 		volume, _ := strconv.ParseInt(values["5. volume"], 10, 64)
 
 		_, err = db.Exec(`
-			INSERT INTO price_history (stock_id, open, high, low, close, volume, recorded_at)
+			INSERT INTO stock_prices (symbol, date, open, high, low, close, volume)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
-			ON CONFLICT DO NOTHING
-		`, stockID, open, high, low, close, volume, recordedAt)
+			ON CONFLICT (symbol, date) DO NOTHING
+		`, symbol, recordedAt, open, high, low, close, volume)
 
 		if err != nil {
 			log.Printf("Error inserting price for %s on %s: %v", symbol, dateStr, err)
@@ -138,16 +111,4 @@ func fetchAndStore(symbol string) error {
 
 	fmt.Printf("Stored %d price records for %s\n", count, symbol)
 	return nil
-}
-
-func upsertStock(symbol, company, sector string) (int, error) {
-	var id int
-	err := db.QueryRow(`
-		INSERT INTO stocks (symbol, company, sector)
-		VALUES ($1, $2, $3)
-		ON CONFLICT (symbol) DO UPDATE
-		SET company = EXCLUDED.company, sector = EXCLUDED.sector
-		RETURNING id
-	`, symbol, company, sector).Scan(&id)
-	return id, err
 }
