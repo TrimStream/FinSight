@@ -1,4 +1,10 @@
-**## Future Improvements
+# FinSight TODO
 
-- **Sidebar indicators:** Change from YTD percentage to day-over-day price change (more relevant for daily data)
-- **AI temporal awareness:** Enable queries like "What price did META open at today?" by injecting current date context into Gemini prompts**
+## High Priority
+- [ ] Change sidebar price indicators from YTD percentage to day-over-day change (yesterday close → today close)
+- [ ] Add temporal context to AI queries (inject current date so "today" and "yesterday" work in natural language)
+
+## Nice to Have
+- [ ] Add more stocks beyond current 8
+- [ ] Historical comparison view (overlay multiple stocks on one chart)
+- [ ] Export query results as CSV
