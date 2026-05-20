@@ -2,37 +2,13 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
-	"strconv"
-	"time"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
-
-// Stock represents a row in the stocks table
-type Stock struct {
-	ID      int
-	Symbol  string
-	Company string
-	Sector  string
-}
-
-// AlphaVantageResponse is the structure of the API response
-type AlphaVantageResponse struct {
-	MetaData   map[string]string            `json:"Meta Data"`
-	TimeSeries map[string]map[string]string `json:"Time Series (Daily)"`
-}
-
-type CompanyOverview struct {
-	Symbol string `json:"Symbol"`
-	Name   string `json:"Name"`
-	Sector string `json:"Sector"`
-}
 
 // db is our global database connection
 var db *sql.DB
