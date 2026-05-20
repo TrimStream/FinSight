@@ -1,103 +1,107 @@
 # FinSight
 
-A full-stack financial intelligence platform that lets you explore real stock market data using natural language queries.
+A full-stack financial intelligence platform combining real-time stock data with AI-powered natural language queries. Ask questions in plain English, get SQL-backed answers.
 
-## What it does
+**🔗 Live:** [eshaan-finsight.vercel.app](https://eshaan-finsight.vercel.app)
 
-- Ingests real-time stock price data from Alpha Vantage API for 8 major stocks
-- Stores and indexes 100 days of price history in PostgreSQL
-- Serves data through a Go REST API
-- Translates plain English questions into SQL queries using Google Gemini AI
-- Displays interactive price charts and a live query interface in a React dashboard
+## What It Does
 
-## Tech Stack
-
-**Backend (Go)**
-- Data ingestion worker that fetches real market data concurrently from Alpha Vantage
-- REST API with endpoints for stocks, price history, and summary statistics
-- PostgreSQL with optimized indexes for time series queries
-
-**AI Layer (Python)**
-- FastAPI service that accepts natural language questions
-- Uses Google Gemini to generate valid PostgreSQL queries from plain English
-- Validates all AI-generated SQL before execution for safety
-- Logs every query and generated SQL for auditability
-
-**Frontend (TypeScript/React)**
-- Dark terminal-style dashboard inspired by trading platforms
-- Interactive area charts with gradient fill using Recharts
-- Sidebar with color coded price change indicators
-- Natural language query box that displays results as a formatted table
+- Tracks 8 major stocks (AAPL, GOOGL, MSFT, AMZN, TSLA, JPM, NVDA, META) with 100 days of price history
+- Updates daily via automated GitHub Actions workflow
+- Translates natural language to SQL using Google Gemini AI
+- Displays interactive price charts and query results in a React dashboard
 
 ## Architecture
-Alpha Vantage API
+GitHub Actions (daily cron)
 
-|
+↓
 
-Go Ingestion Worker --> PostgreSQL <-- Go REST API (port 8080)
+Neon PostgreSQL (800+ records)
 
-|
+↓
 
-Python AI Service (port 8001) <-- Google Gemini
+Go API + Python AI (Render)
 
-|
+↓
 
-React Frontend (port 3000)
+React Frontend (Vercel)
 
-## Getting Started
+**Stack:** Go, Python (FastAPI), React + TypeScript, PostgreSQL, Docker, GitHub Actions
 
-### Prerequisites
-- Go 1.21+
-- Python 3.11+
-- PostgreSQL 15+
-- Node.js 18+
+## Try It
 
-### Setup
+Ask questions like:
+- "Which stock had the highest average closing price?"
+- "Show me the top 3 most traded stocks by volume"
+- "What was the biggest single-day price drop?"
 
-1. Clone the repo
-2. Create the database
+## Local Setup
+
+**Prerequisites:** Go 1.26+, Python 3.11+, Node 20+, PostgreSQL 15+
+
+1. Clone and install:
 ```bash
-psql -U postgres -c "CREATE DATABASE finsight"
-psql -U postgres -d finsight -f db/schema.sql
+git clone https://github.com/TrimStream/FinSight.git
+cd FinSight
+cd backend && go mod download
+cd ../python && pip install -r requirements.txt
+cd ../frontend && npm install
 ```
 
-3. Add environment variables to `backend/.env` and `python/.env`
+2. Create `.env` files in `backend/`, `python/`, and `frontend/` (see `.env.example` in each directory)
 
-DB_HOST=localhost
-
-DB_PORT=5432
-
-DB_USER=postgres
-
-DB_PASSWORD=yourpassword
-
-DB_NAME=finsight
-
-ALPHA_VANTAGE_KEY=yourkey
-
-GEMINI_API_KEY=yourkey
-
-4. Run the Go backend
-```bash
-cd backend
-go run main.go api.go
+3. Set up database:
+```sql
+CREATE TABLE stock_prices (
+    id SERIAL PRIMARY KEY,
+    symbol VARCHAR(10) NOT NULL,
+    date DATE NOT NULL,
+    open NUMERIC(10,2),
+    high NUMERIC(10,2),
+    low NUMERIC(10,2),
+    close NUMERIC(10,2) NOT NULL,
+    volume BIGINT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(symbol, date)
+);
 ```
 
-5. Run the Python AI service
+4. Run services:
 ```bash
-cd python
-python -m uvicorn main:app --port 8001 --reload
+# Terminal 1 - Go API
+cd backend && go run main.go api.go
+
+# Terminal 2 - Python AI
+cd python && python -m uvicorn main:app --port 8000 --reload
+
+# Terminal 3 - Frontend
+cd frontend && npm start
 ```
 
-6. Run the React frontend
-```bash
-cd frontend
-npm start
-```
+Frontend runs at `http://localhost:3000`
 
-## Example Queries
+## Deployment
 
-- "which stock had the highest average closing price"
-- "show me the top 3 most traded stocks by volume"
-- "which stock had the biggest price drop in a single day"
-- "what is the average daily volume for NVDA"
+All services run on free tiers:
+- **Frontend:** Vercel
+- **Go API + Python AI:** Render (Docker containers)
+- **Database:** Neon (serverless Postgres)
+- **Data updates:** GitHub Actions (daily 22:00 UTC)
+
+## Project Structure
+FinSight/
+├── backend/          # Go REST API
+│   ├── fetcher/      # Alpha Vantage data ingestion
+│   └── Dockerfile
+├── python/           # FastAPI + Gemini NL-to-SQL
+│   └── Dockerfile
+├── frontend/         # React + TypeScript + Vite
+└── .github/workflows/ # Automated daily updates
+
+## License
+
+MIT
+
+---
+
+**Eshaan Singh** • [Portfolio](https://trimstream.github.io) • [GitHub](https://github.com/TrimStream)
