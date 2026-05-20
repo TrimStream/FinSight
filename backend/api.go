@@ -25,12 +25,16 @@ type StockSummary struct {
 	PriceRange float64 `json:"price_range"`
 }
 
+// Stock represents basic stock info
+type StockInfo struct {
+	Symbol string `json:"symbol"`
+}
+
 // startAPI starts the HTTP server
 func startAPI() {
 	http.HandleFunc("/api/stocks", handleStocks)
 	http.HandleFunc("/api/stocks/summary", handleSummary)
 	http.HandleFunc("/api/stocks/history", handleHistory)
-
 	log.Println("API server running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
@@ -42,17 +46,17 @@ func handleStocks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := db.Query(`SELECT symbol, company, sector FROM stocks ORDER BY symbol`)
+	rows, err := db.Query(`SELECT DISTINCT symbol FROM stock_prices ORDER BY symbol`)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
-	var stocks []Stock
+	var stocks []StockInfo
 	for rows.Next() {
-		var s Stock
-		err := rows.Scan(&s.Symbol, &s.Company, &s.Sector)
+		var s StockInfo
+		err := rows.Scan(&s.Symbol)
 		if err != nil {
 			continue
 		}
@@ -70,15 +74,14 @@ func handleSummary(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := db.Query(`
-		SELECT s.symbol,
-			   ROUND(AVG(p.close)::numeric, 2),
-			   ROUND(MIN(p.close)::numeric, 2),
-			   ROUND(MAX(p.close)::numeric, 2),
-			   ROUND((MAX(p.close) - MIN(p.close))::numeric, 2)
-		FROM stocks s
-		JOIN price_history p ON s.id = p.stock_id
-		GROUP BY s.symbol
-		ORDER BY ROUND(AVG(p.close)::numeric, 2) DESC
+		SELECT symbol,
+			   ROUND(AVG(close)::numeric, 2),
+			   ROUND(MIN(close)::numeric, 2),
+			   ROUND(MAX(close)::numeric, 2),
+			   ROUND((MAX(close) - MIN(close))::numeric, 2)
+		FROM stock_prices
+		GROUP BY symbol
+		ORDER BY ROUND(AVG(close)::numeric, 2) DESC
 	`)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
@@ -115,12 +118,11 @@ func handleHistory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := db.Query(`
-		SELECT TO_CHAR(p.recorded_at, 'YYYY-MM-DD') as date,
-		       p.open, p.high, p.low, p.close, p.volume
-		FROM price_history p
-		JOIN stocks s ON s.id = p.stock_id
-		WHERE s.symbol = $1
-		ORDER BY p.recorded_at ASC
+		SELECT TO_CHAR(date, 'YYYY-MM-DD') as date,
+		       open, high, low, close, volume
+		FROM stock_prices
+		WHERE symbol = $1
+		ORDER BY date ASC
 	`, symbol)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
