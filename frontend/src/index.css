@@ -1,25 +1,19 @@
-* {
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
 body {
-  background-color: #0a0e1a;
-  color: #ffffff;
+  background-color: #080C10;
+  color: #E2EAF0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #111827;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #3b82f6;
-  border-radius: 3px;
-}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #080C10; }
+::-webkit-scrollbar-thumb { background: #131B24; border-radius: 0; }
