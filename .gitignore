@@ -4,3 +4,14 @@ tmp/
 __pycache__/
 *.pyc
 .air.toml
+
+# Terraform - state and plan files can contain secrets in plaintext
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/*.tfvars
+infra/*.tfplan
+infra/crash.log
+
+# SSH private keys - never commit these
+*.pem

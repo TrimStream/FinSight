@@ -31,18 +31,15 @@ def get_db():
     )
 
 SCHEMA_CONTEXT = """
-You are a SQL expert. You have access to a PostgreSQL database with these tables:
+You are a SQL expert. You have access to a PostgreSQL database with this table:
 
-stocks(id, symbol, company, sector, created_at)
-price_history(id, stock_id, open, high, low, close, volume, recorded_at, created_at)
-
-stocks.id joins to price_history.stock_id
+stock_prices(id, symbol, date, open, high, low, close, volume, created_at)
 
 Rules:
 - Only generate SELECT queries, never INSERT, UPDATE, DELETE, or DROP
 - Always return valid PostgreSQL SQL
 - Return ONLY the SQL query with no explanation, no markdown, no backticks
-- Use recorded_at for date filtering
+- Use date for date filtering
 - Round decimal values to 2 places
 """
 
@@ -78,7 +75,10 @@ async def natural_language_query(request: QueryRequest):
         columns = [desc[0] for desc in cur.description]
         cur.close()
         conn.close()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Query failed: {str(e)}")
 
+    try:
         conn2 = get_db()
         cur2 = conn2.cursor()
         cur2.execute("""
@@ -88,16 +88,15 @@ async def natural_language_query(request: QueryRequest):
         conn2.commit()
         cur2.close()
         conn2.close()
-
-        return QueryResponse(
-            question=request.question,
-            sql=sql,
-            results=[list(row) for row in rows],
-            columns=columns,
-        )
-
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Query failed: {str(e)}")
+        print(f"Warning: failed to log query: {e}")
+
+    return QueryResponse(
+        question=request.question,
+        sql=sql,
+        results=[list(row) for row in rows],
+        columns=columns,
+    )
 
 @app.get("/api/health")
 async def health():

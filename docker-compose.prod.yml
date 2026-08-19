@@ -1,0 +1,38 @@
+version: '3.8'
+
+# Production compose file - runs against RDS instead of a local postgres
+# container. DB_* / API key values come from the environment (see
+# infra/user_data.sh.tpl, which writes .env.prod with these on boot).
+# Port mappings below are rewritten to 127.0.0.1-only by that same script;
+# Caddy is the only service exposed publicly.
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_SSLMODE: ${DB_SSLMODE}
+      ALPHA_VANTAGE_KEY: ${ALPHA_VANTAGE_KEY}
+    restart: unless-stopped
+
+  python:
+    build: ./python
+    ports:
+      - "8001:8001"
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_SSLMODE: ${DB_SSLMODE}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      # python/Dockerfile listens on ${PORT:-8000}; pin it to 8001 so it
+      # actually matches the "8001:8001" port mapping above.
+      PORT: 8001
+    restart: unless-stopped

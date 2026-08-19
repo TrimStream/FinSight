@@ -16,17 +16,17 @@ GitHub Actions (daily cron)
 
 ↓
 
-Neon PostgreSQL (800+ records)
+AWS RDS PostgreSQL (800+ records)
 
 ↓
 
-Go API + Python AI (Render)
+Go API + Python AI (AWS EC2, Docker + Caddy)
 
 ↓
 
 React Frontend (Vercel)
 
-**Stack:** Go, Python (FastAPI), React + TypeScript, PostgreSQL, Docker, GitHub Actions
+**Stack:** Go, Python (FastAPI), React + TypeScript, PostgreSQL, Docker, Terraform, AWS (EC2, RDS), GitHub Actions
 
 ## Try It
 
@@ -82,10 +82,10 @@ Frontend runs at `http://localhost:3000`
 
 ## Deployment
 
-All services run on free tiers:
 - **Frontend:** Vercel
-- **Go API + Python AI:** Render (Docker containers)
-- **Database:** Neon (serverless Postgres)
+- **Go API + Python AI:** AWS EC2 (Docker containers behind Caddy, auto HTTPS)
+- **Database:** AWS RDS (PostgreSQL)
+- **Infrastructure:** Provisioned with Terraform - see [`infra/README.md`](infra/README.md)
 - **Data updates:** GitHub Actions (daily 22:00 UTC)
 
 ## Project Structure
@@ -95,7 +95,7 @@ FinSight/
 │   └── Dockerfile
 ├── python/           # FastAPI + Gemini NL-to-SQL
 │   └── Dockerfile
-├── frontend/         # React + TypeScript + Vite
+├── frontend/         # React + TypeScript (Create React App)
 └── .github/workflows/ # Automated daily updates
 
 ## License
